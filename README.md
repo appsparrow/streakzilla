@@ -1,74 +1,165 @@
-# Welcome to your Lovable project
+# 🏆 Streakzilla - Cross-Platform Habit Tracker
 
-## Project info
+A React Native + Expo app that works on iOS, Android, and Web. Build better habits with friends using the 75 Hard challenge or custom streaks.
 
-**URL**: https://lovable.dev/projects/ca0ccd82-b832-497e-9ca5-45a4baf0038d
+## ✨ Features
 
-## How can I edit this code?
+- 📱 **Cross-Platform**: One codebase for iOS, Android, and Web
+- 🔐 **Authentication**: Secure user accounts with Supabase Auth
+- 🎯 **Streak Creation**: Create 75 Hard, custom, or open-ended challenges
+- 👥 **Social**: Join streaks with friends using invite codes
+- 📊 **Progress Tracking**: Visual 75-circle tracker with day states
+- ❤️ **Lives System**: 3 lives per streak for missed days
+- 📸 **Photo Uploads**: Daily progress photos (coming soon)
+- 🏅 **Streakmates**: See your friends' progress and support each other
 
-There are several ways of editing your application.
+## 🚀 Quick Start
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ca0ccd82-b832-497e-9ca5-45a4baf0038d) and start prompting.
+- Node.js 18+ and npm
+- Expo CLI: `npm install -g @expo/cli`
+- iOS Simulator (for iOS testing)
+- Android Studio (for Android testing)
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+1. **Clone and install dependencies**:
+   ```bash
+   git clone <your-repo>
+   cd streakzilla
+   npm install
+   ```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+2. **Set up Supabase Database**:
+   - Copy the SQL from `database-setup.sql` (coming soon)
+   - Run it in your Supabase SQL Editor
+   - This creates all tables, RLS policies, and functions
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+3. **Start the development server**:
+   ```bash
+   npm start
+   ```
 
-Follow these steps:
+4. **Choose your platform**:
+   - Press `i` for iOS Simulator
+   - Press `a` for Android Emulator  
+   - Press `w` for Web Browser
+   - Or scan QR code with Expo Go app
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 📱 Platform Support
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### iOS
+- Native iOS app via Expo
+- Full feature support
+- App Store ready
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Android  
+- Native Android app via Expo
+- Full feature support
+- Google Play Store ready
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Web
+- Progressive Web App via react-native-web
+- Responsive design
+- Deployable to any web host
+
+## 🛠 Development
+
+### Project Structure
+
+```
+streakzilla/
+├── App.tsx                 # Main app component with navigation
+├── context/               # React contexts (Auth)
+├── screens/              # App screens
+│   ├── LoginScreen.tsx
+│   ├── HomeScreen.tsx
+│   └── ...
+├── components/           # Reusable UI components
+│   └── ui/              # Base UI components
+├── lib/                 # Utilities and configuration
+│   ├── supabase.ts     # Supabase client setup
+│   └── database.types.ts # TypeScript types
+└── web-build/          # Web build output for deployment
 ```
 
-**Edit a file directly in GitHub**
+### Key Technologies
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **React Native + Expo**: Cross-platform mobile development
+- **React Native Web**: Web support from same codebase
+- **NativeWind**: Tailwind CSS for React Native
+- **React Navigation**: Navigation for mobile apps
+- **Supabase**: Backend-as-a-Service (Auth + Database)
+- **TypeScript**: Type safety and better DX
 
-**Use GitHub Codespaces**
+## 🚀 Deployment
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Mobile Apps
 
-## What technologies are used for this project?
+```bash
+# Build for app stores
+eas build --platform all
 
-This project is built with:
+# Submit to stores
+eas submit --platform all
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Web App (Cloudflare Pages)
 
-## How can I deploy this project?
+1. **Build the app**:
+   ```bash
+   npm run build:deploy
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/ca0ccd82-b832-497e-9ca5-45a4baf0038d) and click on Share -> Publish.
+2. **Deploy to Cloudflare Pages**:
+   - Push your code to GitHub
+   - Connect your repo to Cloudflare Pages
+   - Set build command: `npm run build:deploy`
+   - Set build output directory: `web-build`
+   - Set Node.js version: `18.x` or `20.x`
 
-## Can I connect a custom domain to my Lovable project?
+3. **Environment Variables** (if needed):
+   - Add any required environment variables in Cloudflare Pages settings
 
-Yes, you can!
+### Build Configuration
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+The app is configured with:
+- ✅ **Webpack bundler** for web deployment
+- ✅ **Crypto polyfills** disabled for browser compatibility
+- ✅ **Static file generation** in `web-build/` directory
+- ✅ **Cloudflare Pages** compatible headers and redirects
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📋 TODO
 
+- [ ] Complete all screen implementations
+- [ ] Add photo upload with Cloudflare R2
+- [ ] Implement push notifications
+- [ ] Add streak leaderboards
+- [ ] Create admin controls
+- [ ] Add subscription system
+- [ ] Implement offline support
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test on all platforms
+5. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 🆘 Support
+
+For questions or issues:
+
+1. Check the GitHub issues
+2. Create a new issue with detailed description
+3. Include platform and error details
+
+---
+
+**Built with ❤️ for habit builders everywhere**
