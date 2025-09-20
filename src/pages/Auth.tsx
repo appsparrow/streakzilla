@@ -25,7 +25,7 @@ export default function Auth() {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/app');
     }
   }, [user, navigate]);
 
@@ -36,12 +36,12 @@ export default function Auth() {
     if (type === 'signin') {
       const { error } = await signIn(signInEmail, signInPassword);
       if (!error) {
-        navigate('/');
+        navigate('/app');
       }
     } else {
       const { error } = await signUp(signUpEmail, signUpPassword, firstName, lastName);
       if (!error) {
-        navigate('/');
+        navigate('/app');
       }
     }
     
