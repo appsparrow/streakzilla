@@ -112,10 +112,22 @@ export function CheckInModal({
 
   // Core habit detection (template mapping first, legacy fallback)
   function isCore(h: Habit): boolean {
+    console.log(`Checking if habit "${h.title}" is core:`, {
+      is_core: h.is_core,
+      template_set: h.template_set,
+      category: h.category,
+      points: h.points
+    });
+    
     if (h.is_core !== undefined) {
-      return !!h.is_core;
+      const result = !!h.is_core;
+      console.log(`Using is_core field: ${result}`);
+      return result;
     }
-    return h.template_set === '75_hard' || h.category === 'core' || h.points === 0;
+    
+    const fallbackResult = h.template_set === '75_hard' || h.category === 'core' || h.points === 0;
+    console.log(`Using fallback logic: ${fallbackResult}`);
+    return fallbackResult;
   }
 
   // Calculate points - only count bonus habits for Hard Plus modes

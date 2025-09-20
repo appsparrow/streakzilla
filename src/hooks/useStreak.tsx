@@ -156,9 +156,28 @@ export const useStreak = (streakId: string) => {
           .in('id', habitIds);
         if (baseErr) throw baseErr;
 
-        let merged = baseHabits || [];
+        // Get template mapping information for these habits
+        console.log('Fetching template mappings for template_id:', streakInfo.template_id);
+        const { data: templateMappings, error: mappingErr } = await supabase
+          .from('sz_template_habits')
+          .select('habit_id, is_core, points_override')
+          .in('habit_id', habitIds)
+          .eq('template_id', streakInfo.template_id);
 
-        // Simplified habit fetching - no template-specific logic for now
+        if (mappingErr) throw mappingErr;
+        console.log('Template mappings found:', templateMappings);
+
+        // Merge habit data with template mapping info
+        const merged = (baseHabits || []).map(habit => {
+          const mapping = templateMappings?.find(m => m.habit_id === habit.id);
+          const mergedHabit = {
+            ...habit,
+            is_core: mapping?.is_core,
+            points_override: mapping?.points_override
+          };
+          console.log(`Habit ${habit.title}: is_core=${mapping?.is_core}, mapping=`, mapping);
+          return mergedHabit;
+        });
 
         setHabits(merged);
       } else {

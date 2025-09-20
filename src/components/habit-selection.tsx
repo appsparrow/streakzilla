@@ -478,7 +478,8 @@ export function HabitSelection({ streakId, mode, onComplete }: HabitSelectionPro
         </Card>
       )}
 
-      {/* Add Custom Habit */}
+      {/* Add Custom Habit - TEMPORARILY HIDDEN */}
+      {/*
       <Card className="border-card-border">
         <CardHeader>
           <CardTitle className="text-lg">Create Custom Habit</CardTitle>
@@ -555,6 +556,7 @@ export function HabitSelection({ streakId, mode, onComplete }: HabitSelectionPro
           </Dialog>
         </CardContent>
       </Card>
+      */}
 
       {/* Save Button */}
       <div className="flex justify-end">
