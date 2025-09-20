@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { streaks, loading, joinStreak } = useStreaks();
   const [activeTab, setActiveTab] = useState<"active" | "my" | "completed">("active");
   const [joinCode, setJoinCode] = useState("");
@@ -49,9 +49,27 @@ export default function Home() {
     fetchMemberCounts();
   }, [user, streaks]);
 
-  // Early return after ALL hooks are declared
+  // Redirect to auth if not authenticated
+  useEffect(() => {
+    if (!user && !authLoading) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Early return if not authenticated
   if (!user) {
-    navigate("/auth");
     return null;
   }
 

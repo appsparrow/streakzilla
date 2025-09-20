@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useStreaks } from "@/hooks/useStreaks";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Settings, Crown, Zap, ArrowLeft, Camera, Trash2 } from "lucide-react";
+import { User, Settings, Crown, Zap, ArrowLeft, Camera, Trash2, Shield, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
@@ -30,6 +30,27 @@ export default function Profile() {
   const isPremium = user?.user_metadata?.subscription_status === 'premium';
   const myStreaks = streaks.filter(s => s.role === 'admin');
   const joinedStreaks = streaks.filter(s => s.role === 'member');
+  
+  // Check if user is super admin
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  
+  useEffect(() => {
+    checkSuperAdminStatus();
+  }, [user]);
+  
+  const checkSuperAdminStatus = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from("sz_user_roles")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("role", "super_admin")
+      .eq("is_active", true)
+      .single();
+    
+    setIsSuperAdmin(!!data);
+  };
 
   const handleProfileUpdate = async () => {
     if (!user) return;
@@ -183,6 +204,39 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Section */}
+        {isSuperAdmin && (
+          <Card className="md:col-span-1 border-green-200 bg-green-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-700">
+                <Shield className="w-5 h-5" />
+                Admin Panel
+              </CardTitle>
+              <CardDescription>
+                Super admin controls and tools
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => navigate('/templates')}
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Template Manager
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => navigate('/users')}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                User Management
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Content */}
         <Card className="md:col-span-2 border-card-border">

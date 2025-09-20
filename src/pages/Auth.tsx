@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Zap, Target, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -35,16 +36,27 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
     
-    if (type === 'signin') {
-      const { error } = await signIn(signInEmail, signInPassword);
-      if (!error) {
-        navigate('/app');
+    try {
+      if (type === 'signin') {
+        const { error } = await signIn(signInEmail, signInPassword);
+        if (error) {
+          console.error('Sign in error:', error);
+          toast.error(error.message || 'Failed to sign in');
+        }
+        // Navigation will be handled by useEffect when user state changes
+      } else {
+        const { error } = await signUp(signUpEmail, signUpPassword, firstName, lastName);
+        if (error) {
+          console.error('Sign up error:', error);
+          toast.error(error.message || 'Failed to sign up');
+        } else {
+          toast.success('Account created! Please check your email to confirm your account.');
+        }
+        // Navigation will be handled by useEffect when user state changes
       }
-    } else {
-      const { error } = await signUp(signUpEmail, signUpPassword, firstName, lastName);
-      if (!error) {
-        navigate('/app');
-      }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      toast.error('An unexpected error occurred');
     }
     
     setIsLoading(false);
