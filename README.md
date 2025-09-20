@@ -1,4 +1,13 @@
-# Welcome to your Lovable project
+# Streakzilla - Habit Tracking App
+
+## 🚨 **IMPORTANT: Database Update Required**
+
+**⚠️ CRITICAL UPDATE**: A database cleanup is required to fix streak deletion issues. See [DATABASE_CLEANUP_README.md](./DATABASE_CLEANUP_README.md) for detailed instructions.
+
+### **Quick Fix Steps:**
+1. **Run**: `cleanup_orphaned_data.sql` (removes orphaned records)
+2. **Run**: `fix_streak_deletion_cleanup_safe.sql` (adds proper constraints)
+3. **Verify**: All streak deletions now work properly
 
 ## Project info
 
