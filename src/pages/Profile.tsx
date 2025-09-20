@@ -109,8 +109,9 @@ export default function Profile() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth');
+      navigate('/');
     } catch (error) {
+      console.error('Sign out error:', error);
       toast.error("Failed to sign out");
     }
   };
@@ -121,7 +122,7 @@ export default function Profile() {
         title="Profile"
         subtitle="Manage your account settings and view your streaks"
         showBackButton={true}
-        backTo="/"
+        backTo="/app"
         showLogo={true}
       />
 

@@ -275,7 +275,7 @@ export default function TemplateManager() {
         subtitle="Create templates, map habits, and manage core vs bonus"
       >
         <div className="flex gap-2">
-          <Button variant="ghost" onClick={() => navigate("/")}> 
+          <Button variant="ghost" onClick={() => navigate("/app")}> 
             <ArrowLeft className="w-4 h-4 mr-2"/> Back
           </Button>
         </div>

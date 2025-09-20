@@ -59,7 +59,7 @@ export default function StreakDetails() {
         <div className="text-center py-12">
           <h3 className="text-lg font-semibold mb-2">Streak not found</h3>
           <p className="text-muted-foreground mb-4">This streak doesn't exist or you don't have access to it.</p>
-          <Button onClick={() => navigate("/")} variant="outline">
+          <Button onClick={() => navigate("/app")} variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
@@ -91,7 +91,7 @@ export default function StreakDetails() {
       if (error) throw error;
 
       toast.success("Streak deleted successfully");
-      navigate("/");
+      navigate("/app");
     } catch (error: any) {
       console.error('Error deleting streak:', error);
       toast.error(error.message || "Failed to delete streak");
@@ -110,7 +110,7 @@ export default function StreakDetails() {
       if (error) throw error;
 
       toast.success("We are sad you plan to leave but we are glad you were here to try. See you next time!");
-      navigate("/");
+      navigate("/app");
     } catch (error: any) {
       console.error('Error leaving streak:', error);
       toast.error(error.message || "Failed to leave streak");

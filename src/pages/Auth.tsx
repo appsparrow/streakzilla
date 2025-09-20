@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -24,10 +24,12 @@ export default function Auth() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (user) {
+    console.log('Auth page - user state:', user?.id, 'loading:', loading);
+    if (!loading && user) {
+      console.log('User is authenticated, redirecting to /app');
       navigate('/app');
     }
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent, type: 'signin' | 'signup') => {
     e.preventDefault();
@@ -47,6 +49,18 @@ export default function Auth() {
     
     setIsLoading(false);
   };
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
