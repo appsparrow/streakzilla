@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import TemplateManager from "./pages/TemplateManager";
 import { PublicStreakView } from "./pages/PublicStreakView";
+import MarketingLanding from "./pages/MarketingLanding";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +25,8 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<MarketingLanding />} />
+            <Route path="/app" element={<Home />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/create" element={<CreateStreak />} />
             <Route path="/streak/:id" element={<StreakDetails />} />
@@ -33,6 +35,8 @@ const App = () => (
             <Route path="/public/streak/:streakId" element={<PublicStreakView />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/templates" element={<TemplateManager />} />
+            <Route path="/privacy" element={<div className="min-h-screen"><iframe src="/privacy.html" className="w-full h-screen border-0" /></div>} />
+            <Route path="/terms" element={<div className="min-h-screen"><iframe src="/terms.html" className="w-full h-screen border-0" /></div>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

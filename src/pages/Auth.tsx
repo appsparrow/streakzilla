@@ -57,19 +57,20 @@ export default function Auth() {
         <div className="relative z-10 flex flex-col justify-center p-12 text-primary-foreground">
           <div className="max-w-md">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                <Zap className="w-7 h-7" />
-              </div>
-              <h1 className="text-3xl font-bold">Streakzilla</h1>
+              <img 
+                src="/logo-streakzilla-wh.png" 
+                alt="Streakzilla" 
+                className="h-12 w-auto"
+              />
             </div>
             
             <h2 className="text-4xl font-bold mb-6 leading-tight">
-              Build unbreakable habits with friends
+              Build Better Habits Together
             </h2>
             
             <p className="text-xl opacity-90 mb-8">
-              Join challenges, track progress, and stay motivated with your streakmates. 
-              Turn consistency into a game!
+              Join groups, track progress, and stay motivated with your community. 
+              Build good habits in a fun and intuitive way!
             </p>
             
             <div className="space-y-4">
@@ -77,13 +78,13 @@ export default function Auth() {
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <Target className="w-4 h-4" />
                 </div>
-                <span>75+ habit templates to choose from</span>
+                <span>Multiple habit categories to choose from</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <Users className="w-4 h-4" />
                 </div>
-                <span>Social accountability with streakmates</span>
+                <span>Community support and motivation</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
@@ -106,12 +107,13 @@ export default function Auth() {
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                <Zap className="w-6 h-6 text-primary-foreground" />
-              </div>
-              <h1 className="text-2xl font-bold">Streakzilla</h1>
+              <img 
+                src="/logo-streakzilla-bh.png" 
+                alt="Streakzilla" 
+                className="h-10 w-auto"
+              />
             </div>
-            <p className="text-muted-foreground">Build habits that stick</p>
+            <p className="text-muted-foreground">Build better habits together</p>
           </div>
 
           <Tabs defaultValue="signin" className="space-y-6">
