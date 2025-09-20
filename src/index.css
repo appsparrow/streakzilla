@@ -1,0 +1,227 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Streakzilla Design System - Gamified Habit Tracking */
+
+@layer base {
+  :root {
+    /* Core brand colors */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    
+    /* Primary - Lighter purple (accessible) */
+    --primary: 260 60% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 260 70% 75%;
+    --primary-dark: 260 50% 45%;
+    
+    /* Secondary - Black variations */
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
+    
+    /* Gamification accent colors */
+    --progress: 25 95% 60%; /* Orange for progress */
+    --progress-foreground: 0 0% 100%;
+    --success: 142 76% 36%; /* Green for success */
+    --success-foreground: 0 0% 100%;
+    --missed: 0 84% 60%; /* Red for missed days */
+    --missed-foreground: 0 0% 100%;
+    
+    /* Card and UI elements */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --card-border: 260 30% 90%;
+    
+    /* Interactive elements */
+    --muted: 260 15% 95%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 260 100% 97%;
+    --accent-foreground: 260 50% 45%;
+    
+    /* Form elements */
+    --border: 260 20% 88%;
+    --input: 260 20% 96%;
+    --ring: 260 60% 65%;
+    
+    /* Destructive actions */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Border radius */
+    --radius: 0.75rem;
+    
+    /* Gradients for gamification */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-progress: linear-gradient(90deg, hsl(var(--progress)), hsl(25 100% 70%));
+    --gradient-success: linear-gradient(90deg, hsl(var(--success)), hsl(142 86% 46%));
+    --gradient-missed: linear-gradient(90deg, hsl(var(--missed)), hsl(0 94% 70%));
+    
+    /* Shadows for depth */
+    --shadow-primary: 0 10px 25px -10px hsl(var(--primary) / 0.3);
+    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.08);
+    --shadow-glow: 0 0 30px hsl(var(--primary-glow) / 0.4);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --bounce-gentle: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+    
+    --primary: 260 70% 70%;
+    --primary-foreground: 0 0% 8%;
+    --primary-glow: 260 80% 80%;
+    --primary-dark: 260 60% 50%;
+    
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 90%;
+    
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 95%;
+    --card-border: 260 20% 20%;
+    
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 260 50% 15%;
+    --accent-foreground: 260 70% 70%;
+    
+    --border: 260 20% 25%;
+    --input: 260 20% 18%;
+    
+    --shadow-card: 0 2px 8px -2px hsl(0 0% 0% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Circular halo effect from top center, fading to transparent */
+    background-image: radial-gradient(circle at 50% 0%, 
+      hsla(310, 45%, 72%, 0.25) 0%, 
+      hsl(220 70% 80% / 0.18) 30%, 
+      hsl(25 80% 85% / 0.10) 65%, 
+      transparent 100%);
+    background-size: 100vw 100vw;
+    background-repeat: no-repeat;
+    background-position: top center;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/70;
+  }
+}
+
+@layer components {
+  /* Streak circle states */
+  .streak-circle {
+    @apply w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-all duration-300;
+  }
+  
+  .streak-circle-pending {
+    @apply border-muted bg-muted/50 text-muted-foreground;
+  }
+  
+  .streak-circle-current {
+    @apply border-progress bg-progress text-progress-foreground animate-pulse shadow-lg;
+    box-shadow: 0 0 20px hsl(var(--progress) / 0.4);
+  }
+  
+  .streak-circle-complete {
+    @apply border-success bg-success text-success-foreground;
+  }
+  
+  .streak-circle-missed {
+    @apply border-missed bg-missed text-missed-foreground;
+  }
+  
+  .streak-circle-life {
+    @apply border-missed bg-missed text-missed-foreground relative;
+  }
+  
+  .streak-circle-life::after {
+    content: "❤️";
+    @apply absolute -top-1 -right-1 text-xs;
+  }
+  
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-progress {
+    background: var(--gradient-progress);
+  }
+  
+  .gradient-success {
+    background: var(--gradient-success);
+  }
+  
+  .gradient-missed {
+    background: var(--gradient-missed);
+  }
+  
+  /* Confetti animation */
+  .confetti-burst {
+    animation: confetti-fall 2s ease-out forwards;
+  }
+  
+  @keyframes confetti-fall {
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+  
+  /* Progress pulse animation */
+  .progress-pulse {
+    animation: progress-glow 2s infinite;
+  }
+  
+  @keyframes progress-glow {
+    0%, 100% {
+      box-shadow: 0 0 15px hsl(var(--progress) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px hsl(var(--progress) / 0.6);
+    }
+  }
+  
+  /* Smooth hover transitions */
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+  
+  .hover-lift:hover {
+    @apply -translate-y-1 shadow-lg;
+  }
+}
