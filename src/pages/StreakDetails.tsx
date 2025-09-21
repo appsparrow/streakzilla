@@ -33,9 +33,42 @@ export default function StreakDetails() {
   const [isLeaving, setIsLeaving] = useState(false);
   const [isHabitsExpanded, setIsHabitsExpanded] = useState(false);
   const [selectedMember, setSelectedMember] = useState<typeof members[0] | null>(null);
+  const [memberHabits, setMemberHabits] = useState<any[]>([]);
   
   const currentUserMember = members.find(m => m.user_id === user?.id);
   const isAdmin = currentUserMember?.role === 'admin';
+
+  const fetchMemberHabits = async (memberId: string) => {
+    try {
+      // Get member's selected habits
+      const { data: userHabits, error: userHabitsError } = await supabase
+        .from('sz_user_habits')
+        .select('habit_id')
+        .eq('streak_id', streakId)
+        .eq('user_id', memberId);
+
+      if (userHabitsError) throw userHabitsError;
+
+      if (userHabits && userHabits.length > 0) {
+        const habitIds = userHabits.map(uh => uh.habit_id);
+        
+        // Get habit details
+        const { data: habitDetails, error: habitError } = await supabase
+          .from('sz_habits')
+          .select('*')
+          .in('id', habitIds);
+
+        if (habitError) throw habitError;
+        
+        setMemberHabits(habitDetails || []);
+      } else {
+        setMemberHabits([]);
+      }
+    } catch (error) {
+      console.error('Error fetching member habits:', error);
+      setMemberHabits([]);
+    }
+  };
 
   if (!user || !streakId) {
     navigate("/auth");
@@ -244,7 +277,12 @@ export default function StreakDetails() {
                 onClick={() => setIsCheckInDialogOpen(true)}
               >
                 <Target className="w-4 h-4 mr-2" />
-                {todayCheckin ? `Add Bonus Points for Day ${currentDay}` : `Check In for Day ${currentDay}`}
+                {todayCheckin ? 
+                  (todayCheckin.completed_habit_ids.length >= habits.length ? 
+                    '🎉 WOOHOO! Checked in ALL!' : 
+                    `Add Bonus Points for Day ${currentDay}`) : 
+                  `Check In for Day ${currentDay}`
+                }
               </Button>
             </CardContent>
           </Card>
@@ -384,7 +422,10 @@ export default function StreakDetails() {
               return (
                 <div key={member.user_id} className={`flex items-center justify-between p-3 rounded-lg cursor-pointer ${
                   isInactive ? 'bg-muted/30 opacity-60' : 'bg-muted/50'
-                }`} onClick={() => setSelectedMember(member)}>
+                }`} onClick={async () => {
+                  setSelectedMember(member);
+                  await fetchMemberHabits(member.user_id);
+                }}>
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       isInactive 
@@ -506,7 +547,13 @@ export default function StreakDetails() {
 
       <CheckInModal
         open={isCheckInDialogOpen}
-        onOpenChange={setIsCheckInDialogOpen}
+        onOpenChange={(open) => {
+          setIsCheckInDialogOpen(open);
+          // Force refresh data when modal opens to ensure we have latest check-in data
+          if (open) {
+            refetch();
+          }
+        }}
         streakId={streakId}
         dayNumber={getCurrentDayNumber()}
         habits={habits}
@@ -520,13 +567,13 @@ export default function StreakDetails() {
         onOpenChange={(open) => !open && setSelectedMember(null)}
         member={{
           ...selectedMember!,
-          habits: selectedMember ? habits.map(h => ({
+          habits: memberHabits.map(h => ({
             id: h.id,
             title: h.title,
             description: h.description,
             points: h.points,
             category: h.category
-          })) : []
+          }))
         }}
       />
     </div>

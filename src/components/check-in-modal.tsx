@@ -54,17 +54,22 @@ export function CheckInModal({
   const [additionalHabits, setAdditionalHabits] = useState<Habit[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddHabits, setShowAddHabits] = useState(false);
+  const [localCheckedInHabits, setLocalCheckedInHabits] = useState<string[]>([]);
 
   const isHardPlus = mode === '75_hard_plus';
-  const alreadyCheckedIn = todayCheckin && todayCheckin.completed_habit_ids.length > 0;
-  const checkedInHabits = todayCheckin?.completed_habit_ids || [];
+  const alreadyCheckedIn = localCheckedInHabits.length > 0;
+  const checkedInHabits = localCheckedInHabits;
   
-  // Initialize selected habits from today's checkin when modal opens
+  // Initialize completed habits from database when modal opens
   useEffect(() => {
-    if (open && todayCheckin?.completed_habit_ids) {
-      setSelectedHabits([]); // Don't auto-select already completed habits, they'll show as completed
-    } else if (open) {
-      setSelectedHabits([]);
+    if (open) {
+      if (todayCheckin?.completed_habit_ids?.length > 0) {
+        setLocalCheckedInHabits(todayCheckin.completed_habit_ids);
+        setSelectedHabits([]);
+      } else {
+        setLocalCheckedInHabits([]);
+        setSelectedHabits([]);
+      }
     }
   }, [open, todayCheckin]);
 
@@ -112,22 +117,12 @@ export function CheckInModal({
 
   // Core habit detection (template mapping first, legacy fallback)
   function isCore(h: Habit): boolean {
-    console.log(`Checking if habit "${h.title}" is core:`, {
-      is_core: h.is_core,
-      template_set: h.template_set,
-      category: h.category,
-      points: h.points
-    });
-    
     if (h.is_core !== undefined) {
-      const result = !!h.is_core;
-      console.log(`Using is_core field: ${result}`);
-      return result;
+      return !!h.is_core;
     }
     
-    const fallbackResult = h.template_set === '75_hard' || h.category === 'core' || h.points === 0;
-    console.log(`Using fallback logic: ${fallbackResult}`);
-    return fallbackResult;
+    // Fallback logic for backward compatibility
+    return h.template_set === '75_hard' || h.category === 'core' || h.points === 0;
   }
 
   // Calculate points - only count bonus habits for Hard Plus modes
@@ -244,15 +239,22 @@ export function CheckInModal({
       // Calculate total points including progress photo
       const finalPoints = totalPoints + progressPhotoPoints;
 
+      // Always submit the union of existing completed + newly selected for the day
+      const completedForSubmit = Array.from(new Set([...(checkedInHabits || []), ...selectedHabits]));
+      console.log('[checkin] submit', { streakId, dayNumber, completedForSubmit, selectedHabits, checkedInHabits });
+
       const { data, error } = await supabase.rpc('sz_checkin', {
         p_streak_id: streakId,
         p_day_number: dayNumber,
-        p_completed_habit_ids: selectedHabits,
+        p_completed_habit_ids: completedForSubmit,
         p_note: note || null,
         p_photo_url: photoUrl
       });
 
       if (error) throw error;
+
+      // Merge newly completed set into local checked-in state for immediate UI feedback
+      setLocalCheckedInHabits(prev => Array.from(new Set([...(prev || []), ...completedForSubmit])));
 
       let successMessage = `Great job! ${isHardPlus ? 
         (finalPoints > 0 ? `You earned ${finalPoints} bonus points!` : 'You completed your core requirements!') :
@@ -271,6 +273,18 @@ export function CheckInModal({
         successMessage += `\n💖 Bonus points contribute to earning hearts! (1 heart per 100 bonus points)`;
       }
       
+      // Include server response summary if available
+      try {
+        const result = Array.isArray(data) ? data[0] : data;
+        console.log('[checkin] result', result);
+        if (result && (result.points_earned !== undefined || result.hearts_earned !== undefined)) {
+          const parts: string[] = [];
+          if (typeof result.points_earned === 'number') parts.push(`+${result.points_earned} pts`);
+          if (typeof result.hearts_earned === 'number' && result.hearts_earned > 0) parts.push(`+${result.hearts_earned} hearts`);
+          if (parts.length) successMessage += `\n${parts.join(' · ')}`;
+        }
+      } catch {}
+
       toast.success(successMessage);
       onCheckInComplete();
       onOpenChange(false);
@@ -300,7 +314,7 @@ export function CheckInModal({
     ? habits.filter(isCore)
     : habits;
   const bonusHabits = isHardPlus 
-    ? [...habits.filter(habit => !isCore(habit)), ...additionalHabits]
+    ? [...habits.filter(habit => !isCore(habit)), ...additionalHabits.filter(habit => !isCore(habit))]
     : [];
 
   // Check if user has no habits selected yet
@@ -313,6 +327,19 @@ export function CheckInModal({
   ] : [
     { title: "Habits", habits: coreHabits, type: "all" }
   ];
+
+  // Summary counts for UI
+  const allHabits = [...habits, ...additionalHabits];
+  const allCompletedNow = Array.from(new Set([...(localCheckedInHabits || []), ...selectedHabits]));
+  const coreCompletedNow = allCompletedNow.filter(id => {
+    const h = allHabits.find(x => x.id === id);
+    return h ? isCore(h) : false;
+  }).length;
+  const coreTotal = isHardPlus ? coreHabits.length : coreHabits.length;
+  const bonusSelectedNow = selectedHabits.filter(id => {
+    const h = allHabits.find(x => x.id === id);
+    return h ? !isCore(h) : false;
+  }).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -354,22 +381,30 @@ export function CheckInModal({
             </Card>
           )}
 
-          {/* Points Summary - Only show when habits are selected */}
+          {/* Summary */}
           {!noHabitsSelected && (
             <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-yellow-500" />
-                    <span className="font-medium">Points Today</span>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-yellow-500" />
+                      <span className="font-medium">Today's Summary</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Core: <span className="font-medium text-foreground">{coreCompletedNow}/{coreTotal}</span>
+                      {isHardPlus && (
+                        <>
+                          <span className="mx-2">·</span>
+                          Bonus selected: <span className="font-medium text-foreground">{bonusSelectedNow}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="text-right">
                     <Badge variant="secondary" className="text-lg font-bold px-3 py-1">
-                     {isHardPlus ? 
-                        `${(totalPoints + progressPhotoPoints) || 0} bonus points` : 
-                        todaysPoints
-                       }
-                     </Badge>
+                      {isHardPlus ? `${(totalPoints + progressPhotoPoints) || 0} bonus points` : todaysPoints}
+                    </Badge>
                     {alreadyCheckedIn && (
                       <p className="text-xs text-muted-foreground mt-1">
                         +{(totalPoints + progressPhotoPoints) || 0} new points

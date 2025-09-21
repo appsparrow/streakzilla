@@ -227,14 +227,12 @@ export const useStreak = (streakId: string) => {
 
       setMembers(formattedMembers);
 
-      // Check today's checkin status
-      const currentDay = getCurrentDayNumber();
+      // Check most recent checkin status (regardless of day)
       const { data: todayCheckinData } = await supabase
         .from('sz_checkins')
         .select('*')
         .eq('streak_id', streakId)
         .eq('user_id', user.id)
-        .eq('day_number', currentDay)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -245,6 +243,7 @@ export const useStreak = (streakId: string) => {
       }
 
       // Check if missed yesterday (only if not first day)
+      const currentDay = getCurrentDayNumber();
       if (currentDay > 1) {
         const { data: yesterdayCheckin } = await supabase
           .from('sz_checkins')
@@ -300,6 +299,11 @@ export const useStreak = (streakId: string) => {
     
     const startDate = new Date(streak.start_date);
     const today = new Date();
+    
+    // Reset time to compare only dates (not hours/minutes)
+    startDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    
     const diffTime = today.getTime() - startDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
