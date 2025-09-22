@@ -181,7 +181,7 @@ export default function StreakDetails() {
         title={streak.name}
         subtitle={`${streak.mode} • Started ${new Date(streak.start_date).toLocaleDateString()}`}
         showBackButton={true}
-        backTo="/"
+        backTo="/app"
         showLogo={true}
       >
         <div className="flex gap-2">
