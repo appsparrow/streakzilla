@@ -75,6 +75,8 @@ export const useStreak = (streakId: string) => {
   const [todayCheckin, setTodayCheckin] = useState<TodayCheckin | null>(null);
   const [loading, setLoading] = useState(true);
   const [missedYesterday, setMissedYesterday] = useState(false);
+  const [heartsUsedDays, setHeartsUsedDays] = useState<number[]>([]);
+  const [missedDays, setMissedDays] = useState<number[]>([]);
 
   const fetchStreakDetails = async () => {
     if (!user || !streakId) return;
@@ -255,6 +257,44 @@ export const useStreak = (streakId: string) => {
 
         setMissedYesterday(!yesterdayCheckin || yesterdayCheckin.length === 0);
       }
+
+      // Fetch heart transactions to show which days hearts were used
+      const { data: heartTransactions, error: heartError } = await supabase
+        .from('sz_hearts_transactions')
+        .select('day_number, transaction_type')
+        .eq('streak_id', streakId)
+        .eq('from_user_id', user.id)
+        .eq('transaction_type', 'auto_use');
+
+      if (heartError) {
+        console.error('Error fetching heart transactions:', heartError);
+      } else {
+        const heartsUsed = heartTransactions?.map(ht => ht.day_number) || [];
+        setHeartsUsedDays(heartsUsed);
+      }
+
+      // Calculate missed days (days with no checkin and no heart used)
+      const { data: allCheckins, error: checkinsError } = await supabase
+        .from('sz_checkins')
+        .select('day_number')
+        .eq('streak_id', streakId)
+        .eq('user_id', user.id);
+
+      if (checkinsError) {
+        console.error('Error fetching checkins for missed days:', checkinsError);
+      } else {
+        const checkedInDays = allCheckins?.map(c => c.day_number) || [];
+        const completedDays = [...checkedInDays, ...heartsUsedDays];
+        
+        // Find missed days (days from 1 to currentDay-1 that are not completed)
+        const missed = [];
+        for (let day = 1; day < currentDay; day++) {
+          if (!completedDays.includes(day)) {
+            missed.push(day);
+          }
+        }
+        setMissedDays(missed);
+      }
     } catch (error) {
       console.error('Error fetching streak details:', error);
       toast.error('Failed to load streak details');
@@ -279,6 +319,17 @@ export const useStreak = (streakId: string) => {
       });
 
       if (error) throw error;
+
+      // Manually trigger heart application for any missed days
+      try {
+        await supabase.rpc('sz_manual_apply_hearts', {
+          p_streak_id: streak.id,
+          p_user_id: user.id
+        });
+      } catch (heartError) {
+        console.error('Error applying hearts:', heartError);
+        // Don't fail the checkin if heart application fails
+      }
 
       // Hearts are automatically used by the database function when checking in
       toast.success('Check-in completed! 🎉 Hearts automatically protect your streak! ❤️');
@@ -328,6 +379,8 @@ export const useStreak = (streakId: string) => {
     members,
     todayCheckin,
     missedYesterday,
+    heartsUsedDays,
+    missedDays,
     loading,
     checkin,
     getCurrentDayNumber,

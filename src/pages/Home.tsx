@@ -7,6 +7,7 @@ import { Plus, Users, Calendar, Crown, Target, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useStreaks } from "@/hooks/useStreaks";
+// import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { Label } from "@/components/ui/label";
 export default function Home() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  // const { isSuperAdmin } = useSuperAdmin();
   const { streaks, loading, joinStreak } = useStreaks();
   const [activeTab, setActiveTab] = useState<"active" | "my" | "completed">("active");
   const [joinCode, setJoinCode] = useState("");
@@ -55,6 +57,14 @@ export default function Home() {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  // Redirect super admins directly to admin dashboard
+  // Temporarily disabled to fix routing issues
+  // useEffect(() => {
+  //   if (user && !authLoading && isSuperAdmin) {
+  //     navigate("/admin");
+  //   }
+  // }, [user, authLoading, isSuperAdmin, navigate]);
 
   // Show loading state while checking authentication
   if (authLoading) {

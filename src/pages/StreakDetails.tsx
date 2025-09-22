@@ -26,7 +26,7 @@ export default function StreakDetails() {
   const { id: streakId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { streak, habits, members, todayCheckin, missedYesterday, loading, getCurrentDayNumber, calculateExtraHearts, refetch } = useStreak(streakId!);
+  const { streak, habits, members, todayCheckin, missedYesterday, heartsUsedDays, missedDays, loading, getCurrentDayNumber, calculateExtraHearts, refetch } = useStreak(streakId!);
   
   const [isCheckInDialogOpen, setIsCheckInDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -34,6 +34,29 @@ export default function StreakDetails() {
   const [isHabitsExpanded, setIsHabitsExpanded] = useState(false);
   const [selectedMember, setSelectedMember] = useState<typeof members[0] | null>(null);
   const [memberHabits, setMemberHabits] = useState<any[]>([]);
+  const [previousHeartCount, setPreviousHeartCount] = useState<number>(0);
+  const [showHeartCelebration, setShowHeartCelebration] = useState(false);
+  
+  // Track heart changes to show celebration only when hearts are newly earned
+  // This useEffect must be at the top level to maintain hook order
+  useEffect(() => {
+    // Calculate extraHearts here to avoid initialization issues
+    const extraHearts = streak ? calculateExtraHearts(streak.bonus_points, streak.mode) : 0;
+    
+    if (streak && extraHearts > previousHeartCount && previousHeartCount > 0) {
+      // Hearts increased - show celebration
+      setShowHeartCelebration(true);
+      // Auto-hide celebration after 5 seconds
+      const timer = setTimeout(() => {
+        setShowHeartCelebration(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+    // Update previous count only when streak is available
+    if (streak) {
+      setPreviousHeartCount(extraHearts);
+    }
+  }, [streak, previousHeartCount, calculateExtraHearts]);
   
   const currentUserMember = members.find(m => m.user_id === user?.id);
   const isAdmin = currentUserMember?.role === 'admin';
@@ -198,16 +221,22 @@ export default function StreakDetails() {
             </Card>
           )}
 
-          {/* Extra Hearts Earned Alert */}
-          {extraHearts > 0 && (
-            <Card className="border-pink-200 bg-pink-50">
+          {/* Extra Hearts Earned Alert - Only show when hearts are newly earned */}
+          {showHeartCelebration && extraHearts > 0 && (
+            <Card className="border-pink-200 bg-pink-50 animate-pulse">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 text-pink-700">
-                  <Heart className="w-5 h-5 text-pink-500 animate-pulse" />
+                  <Heart className="w-5 h-5 text-pink-500 animate-bounce" />
                   <div>
-                    <p className="font-medium">Amazing! You've earned {extraHearts} extra heart{extraHearts > 1 ? 's' : ''}! 💖</p>
+                    <p className="font-medium">🎉 Amazing! You've earned {extraHearts} extra heart{extraHearts > 1 ? 's' : ''}! 💖</p>
                     <p className="text-sm text-pink-600">Keep pushing beyond the basics for more rewards!</p>
                   </div>
+                  <button 
+                    onClick={() => setShowHeartCelebration(false)}
+                    className="ml-auto text-pink-400 hover:text-pink-600"
+                  >
+                    ✕
+                  </button>
                 </div>
               </CardContent>
             </Card>
@@ -229,8 +258,8 @@ export default function StreakDetails() {
               <Progress75Circles 
                 currentDay={currentDay}
                 totalDays={streak.duration_days}
-                missedDays={[]} // TODO: Get from streak data
-                heartsUsed={[]} // TODO: Get from streak data
+                missedDays={missedDays}
+                heartsUsed={heartsUsedDays}
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

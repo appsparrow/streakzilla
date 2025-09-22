@@ -13,6 +13,8 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import TemplateManager from "./pages/TemplateManager";
 import UserManagement from "./pages/UserManagement";
+import AdminDashboard from "./pages/AdminDashboard";
+import StreakManagement from "./pages/StreakManagement";
 import { PublicStreakView } from "./pages/PublicStreakView";
 import MarketingLanding from "./pages/MarketingLanding";
 
@@ -35,6 +37,11 @@ const App = () => (
             <Route path="/streak/:id/select-habits" element={<SelectHabits />} />
             <Route path="/public/streak/:streakId" element={<PublicStreakView />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/templates" element={<TemplateManager />} />
+            <Route path="/admin/streaks" element={<StreakManagement />} />
+            <Route path="/admin/settings" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h2 className="text-2xl font-bold mb-2">System Settings</h2><p className="text-muted-foreground">Coming soon...</p></div></div>} />
             <Route path="/templates" element={<TemplateManager />} />
             <Route path="/users" element={<UserManagement />} />
             <Route path="/privacy" element={<div className="min-h-screen"><iframe src="/privacy.html" className="w-full h-screen border-0" /></div>} />

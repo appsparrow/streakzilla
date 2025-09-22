@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Zap, Target, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+// import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { toast } from "sonner";
 
 export default function Auth() {
   const navigate = useNavigate();
   const { user, loading, signIn, signUp } = useAuth();
+  // const { isSuperAdmin } = useSuperAdmin();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -27,8 +29,14 @@ export default function Auth() {
   useEffect(() => {
     console.log('Auth page - user state:', user?.id, 'loading:', loading);
     if (!loading && user) {
-      console.log('User is authenticated, redirecting to /app');
-      navigate('/app');
+      // Temporarily disable super admin redirect to fix routing issues
+      // if (isSuperAdmin) {
+      //   console.log('Super admin detected, redirecting to /admin');
+      //   navigate('/admin');
+      // } else {
+        console.log('Regular user, redirecting to /app');
+        navigate('/app');
+      // }
     }
   }, [user, loading, navigate]);
 

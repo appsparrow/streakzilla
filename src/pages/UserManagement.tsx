@@ -70,11 +70,35 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Load all users
-      const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
-      
-      if (usersError) {
+      // Get users from our custom tables instead of admin API
+      const { data: streakMembers, error: membersError } = await supabase
+        .from("sz_streak_members")
+        .select(`
+          user_id,
+          joined_at,
+          current_streak,
+          total_points
+        `)
+        .order('joined_at', { ascending: false });
+
+      if (membersError) {
+        console.error('Error loading streak members:', membersError);
         toast.error("Failed to load users");
+        return;
+      }
+
+      // Get unique user IDs
+      const userIds = [...new Set(streakMembers?.map(m => m.user_id) || [])];
+
+      // Get user details from profiles table
+      const { data: usersData, error: usersError } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, created_at")
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('Error loading users:', usersError);
+        toast.error("Failed to load user details");
         return;
       }
 
@@ -90,30 +114,29 @@ export default function UserManagement() {
 
       setUserRoles(rolesData || []);
 
-      // Load user statistics
-      const { data: statsData, error: statsError } = await supabase
-        .from("sz_streak_members")
-        .select(`
-          user_id,
-          total_points,
-          streaks:sz_streaks(count)
-        `);
-
       // Combine user data with roles and stats
-      const usersWithRoles = (usersData?.users || []).map(user => {
+      const usersWithRoles = (usersData || []).map(user => {
         const userRoles = rolesData?.filter(role => role.user_id === user.id) || [];
-        const userStats = statsData?.find(stat => stat.user_id === user.id);
+        const memberData = streakMembers?.find(m => m.user_id === user.id);
+        
+        // Get user's streak count
+        const userStreaks = streakMembers?.filter(m => m.user_id === user.id) || [];
+        const streakCount = userStreaks.length;
+        const totalPoints = userStreaks.reduce((sum, s) => sum + (s.total_points || 0), 0);
         
         return {
           id: user.id,
           email: user.email || '',
           created_at: user.created_at || '',
-          last_sign_in_at: user.last_sign_in_at,
-          email_confirmed_at: user.email_confirmed_at,
-          raw_user_meta_data: user.user_metadata,
+          last_sign_in_at: null, // Not available in our custom tables
+          email_confirmed_at: null, // Not available in our custom tables
+          raw_user_meta_data: {
+            full_name: user.full_name || '',
+            display_name: user.full_name || user.email?.split('@')[0] || ''
+          },
           roles: userRoles.map(role => role.role),
-          streak_count: userStats?.streaks?.[0]?.count || 0,
-          total_points: userStats?.total_points || 0
+          streak_count: streakCount,
+          total_points: totalPoints
         };
       });
 
@@ -205,7 +228,7 @@ export default function UserManagement() {
         title="User Management"
         subtitle="Manage user roles and permissions"
         showBackButton={true}
-        backTo="/app"
+        backTo="/admin"
         showLogo={true}
       />
 

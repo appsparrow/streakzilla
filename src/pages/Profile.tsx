@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/layout/page-header";
 import { useAuth } from "@/hooks/useAuth";
 import { useStreaks } from "@/hooks/useStreaks";
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Settings, Crown, Zap, ArrowLeft, Camera, Trash2, Shield, Users } from "lucide-react";
@@ -17,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 export default function Profile() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isSuperAdmin } = useSuperAdmin();
   const { streaks, loading } = useStreaks();
   const [profile, setProfile] = useState({
     display_name: user?.user_metadata?.display_name || "",
@@ -31,26 +33,6 @@ export default function Profile() {
   const myStreaks = streaks.filter(s => s.role === 'admin');
   const joinedStreaks = streaks.filter(s => s.role === 'member');
   
-  // Check if user is super admin
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  
-  useEffect(() => {
-    checkSuperAdminStatus();
-  }, [user]);
-  
-  const checkSuperAdminStatus = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from("sz_user_roles")
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("role", "super_admin")
-      .eq("is_active", true)
-      .single();
-    
-    setIsSuperAdmin(!!data);
-  };
 
   const handleProfileUpdate = async () => {
     if (!user) return;
@@ -143,7 +125,7 @@ export default function Profile() {
         title="Profile"
         subtitle="Manage your account settings and view your streaks"
         showBackButton={true}
-        backTo="/app"
+        backTo={isSuperAdmin ? "/admin" : "/app"}
         showLogo={true}
       />
 
@@ -221,18 +203,10 @@ export default function Profile() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start" 
-                onClick={() => navigate('/templates')}
+                onClick={() => navigate('/admin')}
               >
-                <Settings className="w-4 h-4 mr-2" />
-                Template Manager
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={() => navigate('/users')}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                User Management
+                <Shield className="w-4 h-4 mr-2" />
+                Admin Dashboard
               </Button>
             </CardContent>
           </Card>
