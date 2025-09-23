@@ -93,10 +93,12 @@ export default function StreakDetails() {
     }
   };
 
-  if (!user || !streakId) {
-    navigate("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (!user || !streakId) {
+      navigate("/auth");
+    }
+  }, [user, streakId, navigate]);
+  if (!user || !streakId) return null;
 
   if (loading) {
     return (
@@ -262,43 +264,7 @@ export default function StreakDetails() {
                 heartsUsed={heartsUsedDays}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">{streak.current_streak}</div>
-                  <div className="text-sm text-muted-foreground">Current Streak</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">{streak.total_points}</div>
-                  <div className="text-sm text-muted-foreground">Total Points</div>
-                </div>
-                <div className="text-center flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-2xl font-bold text-red-500">
-                    <div className="group relative">
-                      <Heart className="w-6 h-6 cursor-help" />
-                      <div className="hidden group-hover:block absolute z-10 left-1/2 -translate-x-1/2 mt-2 w-64 bg-white border rounded-md shadow-md p-3 text-sm">
-                        <div className="font-medium mb-1">Heart System</div>
-                        <div className="text-gray-600 mb-2">
-                          {streak.points_to_hearts_enabled 
-                            ? 'Earn 1 heart per 100 points. Use hearts to protect your streak if you miss a day.' 
-                            : 'Lives system enabled. Miss a day to lose a life.'}
-                        </div>
-                        {streak.points_to_hearts_enabled && (
-                          <div className="text-xs text-pink-600">
-                            {100 - (streak.total_points % 100)} points to next heart
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {streak.points_to_hearts_enabled ? streak.hearts_available : streak.lives_remaining}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {streak.points_to_hearts_enabled 
-                      ? `Hearts Available` 
-                      : `Lives Left`
-                    }
-                  </div>
-                </div>
-              </div>
+              {/* Stats moved to right sidebar under Daily Quote */}
 
               <Button 
                 className="w-full gradient-primary text-primary-foreground border-0"
@@ -317,57 +283,29 @@ export default function StreakDetails() {
           </Card>
 
           {/* Progress Circles */}
-          <Card className="border-card-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Daily Progress
-              </CardTitle>
-              <CardDescription>
-                Visual representation of your streak progress
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Simple Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">Progress</span>
-                  <span className="text-sm text-gray-500">{currentDay}/{streak.duration_days} days</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(currentDay / streak.duration_days) * 100}%` }}
-                  />
-                </div>
-                <div className="text-sm text-gray-500">
-                  {streak.duration_days - currentDay} days remaining
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
 
           {/* Habits */}
           <Card className="border-card-border overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <span>Your Habits</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setIsHabitsExpanded(!isHabitsExpanded)}
-                  >
-                    {isHabitsExpanded ? 'Collapse' : 'Expand'}
-                  </Button>
-                </CardTitle>
-                <CardDescription>
-                  Complete these daily to earn points and maintain your streak
-                </CardDescription>
-              </div>
+            <CardHeader className="space-y-2 pb-2">
+              <CardTitle className="flex items-center gap-2">
+                <span>Your Habits</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setIsHabitsExpanded(!isHabitsExpanded)}
+                >
+                  {isHabitsExpanded ? 'Collapse' : 'Expand'}
+                </Button>
+              </CardTitle>
+              <CardDescription>
+                Complete these daily to earn points and maintain your streak
+              </CardDescription>
+            </CardHeader>
+            <CardContent className={`transition-all duration-300 ${isHabitsExpanded ? 'pt-2' : 'pt-0'}`}>
               {(streak.mode.includes('75_hard') || streak.mode === 'custom') && (
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 mb-4">
                   <Button
                     variant="outline"
                     size="sm"
@@ -379,8 +317,6 @@ export default function StreakDetails() {
                   <HabitCountdown streakStartDate={streak.start_date} />
                 </div>
               )}
-            </CardHeader>
-            <CardContent className={`transition-all duration-300 ${isHabitsExpanded ? 'pt-4' : 'pt-0'}`}>
               <div className={`space-y-3 relative ${isHabitsExpanded ? '' : 'max-h-[120px] overflow-hidden'}`}>
                 {habits.map((habit) => (
                   <div key={habit.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg border-card-border space-y-2 sm:space-y-0">
@@ -427,11 +363,108 @@ export default function StreakDetails() {
 
           {/* Daily Inspiration */}
           <InspireSection currentDay={currentDay} />
+
+          {/* Streak Stats (moved here) */}
+          <Card className="border-card-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                Stats
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-xl font-bold text-primary">{streak.current_streak}</div>
+                  <div className="text-xs text-muted-foreground">Current Streak</div>
+                </div>
+                <div>
+                  <div className="text-xl font-bold text-primary">{streak.total_points}</div>
+                  <div className="text-xs text-muted-foreground">Total Points</div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-center gap-1 text-xl font-bold text-red-500">
+                    <Heart className="w-5 h-5" />
+                    {streak.points_to_hearts_enabled ? streak.hearts_available : streak.lives_remaining}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {streak.points_to_hearts_enabled ? 'Hearts Available' : 'Lives Left'}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Streakmates moved to sidebar on desktop */}
+          <Card className="border-card-border hidden lg:block">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Streakmates ({members.length})
+              </CardTitle>
+              <CardDescription>
+                Your fellow challenge participants
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {members.map((member) => {
+                  const isLeft = member.status === 'left';
+                  const isEliminated = member.status === 'eliminated';
+                  const isInactive = isLeft || isEliminated;
+                  
+                  return (
+                    <div key={member.user_id} className={`flex items-center justify-between p-3 rounded-lg ${
+                      isInactive ? 'bg-muted/30 opacity-60' : 'bg-muted/50'
+                    }`}>
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isInactive 
+                            ? 'bg-muted border-2 border-dashed border-muted-foreground/30' 
+                            : 'bg-gradient-to-r from-primary/20 to-primary/40'
+                        }`}>
+                          <span className="font-medium text-primary">
+                            {member.display_name?.charAt(0) || 'U'}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className={`font-medium truncate ${isInactive ? 'text-muted-foreground' : ''}`}>
+                              {member.display_name || 'Anonymous'}
+                            </h4>
+                            {member.role === 'admin' && !isInactive && (
+                              <Badge variant="outline" className="text-xs hidden xl:flex">
+                                <Crown className="w-3 h-3 mr-1" />
+                                Admin
+                              </Badge>
+                            )}
+                          </div>
+                          <p className={`text-sm ${isInactive ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+                            {member.total_points} pts • {isInactive ? 'Final: ' : ''}Day {member.current_streak}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {!isInactive && (
+                          <div className="text-right text-sm">
+                            <div className="flex items-center gap-1">
+                              <Heart className="w-3 h-3 text-red-500" />
+                              <span>{streak.points_to_hearts_enabled ? member.hearts_available : member.lives_remaining}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Streakmates Section - Moved to bottom for mobile */}
-      <Card className="border-card-border mt-8">
+      {/* Streakmates for mobile/tablet (bottom). Hidden on desktop since sidebar shows it */}
+      <Card className="border-card-border mt-8 lg:hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />

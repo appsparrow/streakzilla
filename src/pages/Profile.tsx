@@ -12,7 +12,7 @@ import { useStreaks } from "@/hooks/useStreaks";
 import { useSuperAdmin } from "@/hooks/useSuperAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Settings, Crown, Zap, ArrowLeft, Camera, Trash2, Shield, Users } from "lucide-react";
+import { User, Settings, Crown, ArrowLeft, Camera, Trash2, Shield, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
@@ -176,13 +176,7 @@ export default function Profile() {
                   <div className="text-muted-foreground">Joined</div>
                 </div>
               </div>
-              
-              {!isPremium && (
-                <Button className="w-full gradient-primary text-primary-foreground border-0" size="sm">
-                  <Crown className="w-4 h-4 mr-2" />
-                  Upgrade to Premium
-                </Button>
-              )}
+
             </div>
           </CardContent>
         </Card>
@@ -216,15 +210,10 @@ export default function Profile() {
         <Card className="md:col-span-2 border-card-border">
           <CardHeader>
             <Tabs defaultValue="settings" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="settings">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
-                </TabsTrigger>
-                <TabsTrigger value="my-streaks">My Streaks</TabsTrigger>
-                <TabsTrigger value="subscription">
-                  <Crown className="w-4 h-4 mr-2" />
-                  Premium
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -303,157 +292,7 @@ export default function Profile() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="my-streaks" className="space-y-4 mt-0">
-                {loading ? (
-                  <div className="text-center py-8">Loading your streaks...</div>
-                ) : (
-                  <>
-                    {myStreaks.length > 0 ? (
-                      <div className="space-y-3">
-                        {myStreaks.map((streak) => (
-                          <Card key={streak.id} className="border-card-border">
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h4 className="font-medium">{streak.name}</h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    Day {streak.current_streak} • {streak.total_points} points
-                                  </p>
-                                </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => navigate(`/streak/${streak.id}`)}
-                                >
-                                  View
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground mb-4">You haven't created any streaks yet</p>
-                        <Button onClick={() => navigate('/create')}>
-                          Create Your First Streak
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {joinedStreaks.length > 0 && (
-                      <>
-                        <h4 className="font-medium mt-6 mb-3">Joined Streaks</h4>
-                        <div className="space-y-3">
-                          {joinedStreaks.map((streak) => (
-                            <Card key={streak.id} className="border-card-border">
-                              <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <h4 className="font-medium">{streak.name}</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                      Day {streak.current_streak} • {streak.total_points} points
-                                    </p>
-                                  </div>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => navigate(`/streak/${streak.id}`)}
-                                  >
-                                    View
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </>
-                )}
-              </TabsContent>
-
-              <TabsContent value="subscription" className="space-y-6 mt-0">
-                <div className="space-y-6">
-                  {/* Current Plan */}
-                  <Card className={`border-2 ${isPremium ? 'border-yellow-500 bg-yellow-50/50' : 'border-border'}`}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        {isPremium ? <Crown className="w-5 h-5 text-yellow-500" /> : <User className="w-5 h-5" />}
-                        {isPremium ? 'Premium Plan' : 'Free Plan'}
-                      </CardTitle>
-                      <CardDescription>
-                        {isPremium ? 'You have access to all premium features' : 'Limited features available'}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {isPremium ? (
-                          <>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Zap className="w-4 h-4 text-green-500" />
-                              Unlimited streaks
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Zap className="w-4 h-4 text-green-500" />
-                              Custom templates and habits
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Zap className="w-4 h-4 text-green-500" />
-                              Daily photo uploads
-                            </div>
-                            <div className="flex items-center gap-2 text-sm">
-                              <Zap className="w-4 h-4 text-green-500" />
-                              Priority support
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="text-sm text-muted-foreground">
-                              • 1 streak maximum
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              • Basic templates only
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              • Limited photo uploads
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Upgrade Section */}
-                  {!isPremium && (
-                    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Crown className="w-5 h-5 text-yellow-500" />
-                          Upgrade to Premium
-                        </CardTitle>
-                        <CardDescription>
-                          Unlock unlimited streaks and advanced features
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="text-3xl font-bold">
-                            $9.99<span className="text-lg font-normal text-muted-foreground">/month</span>
-                          </div>
-                          <Button className="w-full gradient-primary text-primary-foreground border-0" size="lg">
-                            <Crown className="w-4 h-4 mr-2" />
-                            Upgrade Now
-                          </Button>
-                          <p className="text-xs text-muted-foreground text-center">
-                            Cancel anytime • 7-day free trial
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </TabsContent>
+              {/* Removed My Streaks and Premium tabs for now */}
             </Tabs>
           </CardContent>
         </Card>

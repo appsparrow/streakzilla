@@ -343,7 +343,8 @@ export function CheckInModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Prevent horizontal scroll on mobile */}
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
@@ -385,11 +386,11 @@ export function CheckInModal({
           {!noHabitsSelected && (
             <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="space-y-1 min-w-[200px]">
                     <div className="flex items-center gap-2">
                       <Zap className="w-5 h-5 text-yellow-500" />
-                      <span className="font-medium">Today's Summary</span>
+                      <span className="font-medium">Today’s summary</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Core: <span className="font-medium text-foreground">{coreCompletedNow}/{coreTotal}</span>
@@ -401,13 +402,13 @@ export function CheckInModal({
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge variant="secondary" className="text-lg font-bold px-3 py-1">
-                      {isHardPlus ? `${(totalPoints + progressPhotoPoints) || 0} bonus points` : todaysPoints}
+                  <div className="text-right min-w-[160px]">
+                    <Badge variant="secondary" className="text-sm font-semibold px-3 py-1">
+                      {isHardPlus ? `${(totalPoints + progressPhotoPoints) || 0} bonus pts` : todaysPoints}
                     </Badge>
                     {alreadyCheckedIn && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        +{(totalPoints + progressPhotoPoints) || 0} new points
+                        +{(totalPoints + progressPhotoPoints) || 0} new pts
                       </p>
                     )}
                   </div>

@@ -83,6 +83,7 @@ export const useStreak = (streakId: string) => {
 
     try {
       setLoading(true);
+      let heartsUsedLocal: number[] = [];
 
       // Get streak basic info
       const { data: streakInfo, error: streakInfoError } = await supabase
@@ -112,11 +113,25 @@ export const useStreak = (streakId: string) => {
         return;
       }
 
+      // Compute current day using streakInfo (fetched above) to avoid setState race
+      let currentDayComputed = 1;
+
       // Calculate hearts from points until migration is applied
       const totalPoints = membershipData.total_points || 0;
       const heartsFromPoints = Math.floor(totalPoints / 100);
       const heartsUsed = membershipData.hearts_used || 0;
       const heartsAvailable = Math.max(0, heartsFromPoints - heartsUsed);
+
+      // Compute current day directly from start_date to avoid relying on setState
+      try {
+        const startDate = new Date(streakInfo.start_date);
+        const today = new Date();
+        startDate.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+        const diffTime = today.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        currentDayComputed = Math.max(1, diffDays + 1);
+      } catch {}
 
       setStreak({
         id: streakInfo.id,
@@ -245,7 +260,7 @@ export const useStreak = (streakId: string) => {
       }
 
       // Check if missed yesterday (only if not first day)
-      const currentDay = getCurrentDayNumber();
+      const currentDay = currentDayComputed;
       if (currentDay > 1) {
         const { data: yesterdayCheckin } = await supabase
           .from('sz_checkins')
@@ -255,22 +270,24 @@ export const useStreak = (streakId: string) => {
           .eq('day_number', currentDay - 1)
           .limit(1);
 
-        setMissedYesterday(!yesterdayCheckin || yesterdayCheckin.length === 0);
+        const noCheckinYesterday = !yesterdayCheckin || yesterdayCheckin.length === 0;
+        const heartProtectedYesterday = heartsUsedLocal.includes(currentDay - 1);
+        setMissedYesterday(noCheckinYesterday && !heartProtectedYesterday);
       }
 
-      // Fetch heart transactions to show which days hearts were used
+      // Fetch heart transactions to show which days hearts were used (auto or manual)
       const { data: heartTransactions, error: heartError } = await supabase
         .from('sz_hearts_transactions')
         .select('day_number, transaction_type')
         .eq('streak_id', streakId)
         .eq('from_user_id', user.id)
-        .eq('transaction_type', 'auto_use');
+        .in('transaction_type', ['auto_use', 'manual_use', 'admin_apply']);
 
       if (heartError) {
         console.error('Error fetching heart transactions:', heartError);
       } else {
-        const heartsUsed = heartTransactions?.map(ht => ht.day_number) || [];
-        setHeartsUsedDays(heartsUsed);
+        heartsUsedLocal = heartTransactions?.map(ht => ht.day_number) || [];
+        setHeartsUsedDays(heartsUsedLocal);
       }
 
       // Calculate missed days (days with no checkin and no heart used)
@@ -284,7 +301,8 @@ export const useStreak = (streakId: string) => {
         console.error('Error fetching checkins for missed days:', checkinsError);
       } else {
         const checkedInDays = allCheckins?.map(c => c.day_number) || [];
-        const completedDays = [...checkedInDays, ...heartsUsedDays];
+        // Use freshly-fetched heartsUsedLocal to avoid state staleness in same tick
+        const completedDays = [...checkedInDays, ...heartsUsedLocal];
         
         // Find missed days (days from 1 to currentDay-1 that are not completed)
         const missed = [];
