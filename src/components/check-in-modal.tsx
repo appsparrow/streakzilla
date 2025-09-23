@@ -7,10 +7,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Camera, Upload, X, Zap, Target } from "lucide-react";
+import { Camera, Upload, X, Zap, Target, Grip, ArrowRight, AlignJustify } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Slider } from "@/components/ui/slider";
 
 interface Habit {
   id: string;
@@ -55,6 +56,9 @@ export function CheckInModal({
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddHabits, setShowAddHabits] = useState(false);
   const [localCheckedInHabits, setLocalCheckedInHabits] = useState<string[]>([]);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [showAllDescriptions, setShowAllDescriptions] = useState(false);
+  const [quickCoreSlider, setQuickCoreSlider] = useState<number>(0);
 
   const isHardPlus = mode === '75_hard_plus';
   const alreadyCheckedIn = localCheckedInHabits.length > 0;
@@ -151,6 +155,21 @@ export function CheckInModal({
   const progressPhotoPoints = photo && isHardPlus ? 5 : 0;
 
   const todaysPoints = (todayCheckin?.points_earned || 0) + totalPoints + progressPhotoPoints;
+
+  const toggleDescription = (habitId: string) => {
+    setExpandedDescriptions(prev => ({ ...prev, [habitId]: !prev[habitId] }));
+  };
+
+  const toggleAllDescriptions = () => {
+    setShowAllDescriptions(!showAllDescriptions);
+    // Update all habits in current groups to match the global state
+    const allHabitIds = habitGroups.flatMap(group => group.habits.map(h => h.id));
+    const newExpandedState = allHabitIds.reduce((acc, id) => {
+      acc[id] = !showAllDescriptions;
+      return acc;
+    }, {} as Record<string, boolean>);
+    setExpandedDescriptions(newExpandedState);
+  };
 
   const handleHabitToggle = (habitId: string) => {
     // Don't allow unchecking already completed habits
@@ -277,10 +296,11 @@ export function CheckInModal({
       try {
         const result = Array.isArray(data) ? data[0] : data;
         console.log('[checkin] result', result);
-        if (result && (result.points_earned !== undefined || result.hearts_earned !== undefined)) {
+        const heartsEarned = (result as any)?.hearts_earned;
+        if (result && (result.points_earned !== undefined || heartsEarned !== undefined)) {
           const parts: string[] = [];
           if (typeof result.points_earned === 'number') parts.push(`+${result.points_earned} pts`);
-          if (typeof result.hearts_earned === 'number' && result.hearts_earned > 0) parts.push(`+${result.hearts_earned} hearts`);
+          if (typeof heartsEarned === 'number' && heartsEarned > 0) parts.push(`+${heartsEarned} hearts`);
           if (parts.length) successMessage += `\n${parts.join(' · ')}`;
         }
       } catch {}
@@ -322,7 +342,7 @@ export function CheckInModal({
   
   // Group habits by type for Hard Plus mode
   const habitGroups = isHardPlus ? [
-    { title: "75 Hard Core Requirements", habits: coreHabits, type: "core" },
+    { title: "75 Hard Core ", habits: coreHabits, type: "core" },
     ...(bonusHabits.length > 0 ? [{ title: "Bonus Habits (Extra Points)", habits: bonusHabits, type: "bonus" }] : [])
   ] : [
     { title: "Habits", habits: coreHabits, type: "all" }
@@ -340,6 +360,36 @@ export function CheckInModal({
     const h = allHabits.find(x => x.id === id);
     return h ? !isCore(h) : false;
   }).length;
+
+  const handleQuickCoreSlide = (values: number[]) => {
+    const value = values[0] || 0;
+    setQuickCoreSlider(value);
+
+    const coreRemaining = coreHabits.filter(h => !checkedInHabits.includes(h.id));
+    if (coreRemaining.length === 0) return;
+
+    const desiredCount = Math.round((value / 100) * coreRemaining.length);
+    const newSelectedCoreIds = coreRemaining.slice(0, Math.max(0, desiredCount)).map(h => h.id);
+
+    setSelectedHabits(prev => {
+      // Preserve: non-core selections and already-checked core (they won't be in selectedHabits anyway)
+      const preserved = prev.filter(id => {
+        const h = allHabits.find(x => x.id === id);
+        return h ? !isCore(h) : true;
+      });
+      return Array.from(new Set([...preserved, ...newSelectedCoreIds]));
+    });
+
+    // Auto-submit when fully slid and all remaining core are selected
+    if (value >= 100 && newSelectedCoreIds.length === coreRemaining.length && !isSubmitting) {
+      setTimeout(() => {
+        // Double-check still at 100 and not submitting
+        if (!isSubmitting) {
+          handleSubmit();
+        }
+      }, 0);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -382,40 +432,7 @@ export function CheckInModal({
             </Card>
           )}
 
-          {/* Summary */}
-          {!noHabitsSelected && (
-            <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="space-y-1 min-w-[200px]">
-                    <div className="flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-yellow-500" />
-                      <span className="font-medium">Today’s summary</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Core: <span className="font-medium text-foreground">{coreCompletedNow}/{coreTotal}</span>
-                      {isHardPlus && (
-                        <>
-                          <span className="mx-2">·</span>
-                          Bonus selected: <span className="font-medium text-foreground">{bonusSelectedNow}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right min-w-[160px]">
-                    <Badge variant="secondary" className="text-sm font-semibold px-3 py-1">
-                      {isHardPlus ? `${(totalPoints + progressPhotoPoints) || 0} bonus pts` : todaysPoints}
-                    </Badge>
-                    {alreadyCheckedIn && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        +{(totalPoints + progressPhotoPoints) || 0} new pts
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Summary - hidden per design request */}
 
           {/* Only show check-in interface when habits are selected */}
           {!noHabitsSelected && (
@@ -468,69 +485,107 @@ export function CheckInModal({
                 </Label>
             
                 {habitGroups.map((group) => (
-                  <Card key={`${group.type}-${group.title}`} className={`border-card-border ${
-                    group.type === 'core' ? 'border-orange-200 bg-orange-50/50' : 
-                    group.type === 'bonus' ? 'border-blue-200 bg-blue-50/50' : ''
-                  }`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        {group.type === 'core' && <Target className="w-4 h-4 text-orange-600" />}
-                        {group.type === 'bonus' && <Zap className="w-4 h-4 text-blue-600" />}
-                        <h4 className={`font-medium text-sm ${
-                          group.type === 'core' ? 'text-orange-700' :
-                          group.type === 'bonus' ? 'text-blue-700' : 'text-muted-foreground'
-                        }`}>
-                          {group.title}
-                          {group.type === 'core' && ' (Required Daily)'}
-                          {group.type === 'bonus' && ' (Optional - Earn Hearts)'}
-                        </h4>
-                      </div>
-                      <div className="space-y-3">
-                        {group.habits.map((habit) => {
-                          const isCompleted = checkedInHabits.includes(habit.id);
-                          const isSelected = selectedHabits.includes(habit.id);
-                          
-                          return (
-                            <div 
-                              key={habit.id} 
-                              className={`flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer ${
-                                isCompleted ? 'bg-green-50 border border-green-200' : ''
-                              }`}
-                              onClick={() => !isCompleted && handleHabitToggle(habit.id)}
-                            >
-                              <Checkbox
-                                id={habit.id}
-                                checked={isCompleted || isSelected}
-                                onCheckedChange={() => handleHabitToggle(habit.id)}
-                                disabled={isCompleted}
-                              />
-                              <div className="flex-1 min-w-0">
-                                <label 
-                                  htmlFor={habit.id}
-                                  className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer ${
-                                    isCompleted ? 'text-green-600' : ''
-                                  }`}
-                                >
-                                  {habit.title}
-                                  {isCompleted && ' ✅'}
-                                  {isCore(habit) && !isCompleted && !isSelected && ' (Required)'}
-                                </label>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {habit.description}
-                                </p>
+                  <>
+                    <Card key={`${group.type}-${group.title}`} className={`border-card-border ${
+                      group.type === 'core' ? 'border-orange-200 bg-orange-50/50' : 
+                      group.type === 'bonus' ? 'border-blue-200 bg-blue-50/50' : ''
+                    }`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            {group.type === 'core' && <Target className="w-4 h-4 text-orange-600" />}
+                            {group.type === 'bonus' && <Zap className="w-4 h-4 text-blue-600" />}
+                            <h4 className={`font-medium text-sm ${
+                              group.type === 'core' ? 'text-orange-700' :
+                              group.type === 'bonus' ? 'text-blue-700' : 'text-muted-foreground'
+                            }`}>
+                              {group.title}
+                              {group.type === 'core' && ' (Required Daily)'}
+                              {group.type === 'bonus' && ' (Optional - Earn Hearts)'}
+                            </h4>
+                          </div>
+                          <button
+                            type="button"
+                            aria-label="Toggle all descriptions"
+                            onClick={toggleAllDescriptions}
+                            className="p-1 rounded hover:bg-muted text-muted-foreground"
+                          >
+                            <AlignJustify className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <div className="space-y-3">
+                          {group.habits.map((habit) => {
+                            const isCompleted = checkedInHabits.includes(habit.id);
+                            const isSelected = selectedHabits.includes(habit.id);
+                            const isExpanded = !!expandedDescriptions[habit.id];
+                            
+                            return (
+                              <div 
+                                key={habit.id} 
+                                className={`flex items-start space-x-3 p-2 rounded-lg hover:bg-muted/30 transition-colors cursor-pointer ${
+                                  isCompleted ? 'bg-green-50 border border-green-200' : ''
+                                }`}
+                                onClick={() => !isCompleted && handleHabitToggle(habit.id)}
+                              >
+                                <Checkbox
+                                  id={habit.id}
+                                  checked={isCompleted || isSelected}
+                                  onCheckedChange={() => handleHabitToggle(habit.id)}
+                                  disabled={isCompleted}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <label 
+                                    htmlFor={habit.id}
+                                    className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer ${
+                                      isCompleted ? 'text-green-600' : ''
+                                    }`}
+                                  >
+                                    {habit.title}
+                                    {isCore(habit) && !isCompleted && !isSelected && ' (Required)'}
+                                  </label>
+                                  {expandedDescriptions[habit.id] && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {habit.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <Badge variant={
+                                  isCore(habit) ? 'destructive' : 
+                                  isCompleted ? "default" : "outline"
+                                } className="ml-2">
+                                  {isCore(habit) ? 'CORE' : `${(habit.points_override ?? habit.points) || 0} pts`}
+                                </Badge>
                               </div>
-                              <Badge variant={
-                                isCore(habit) ? 'destructive' : 
-                                isCompleted ? "default" : "outline"
-                              } className="ml-2">
-                                {isCore(habit) ? 'CORE' : `${(habit.points_override ?? habit.points) || 0} pts`}
-                              </Badge>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {group.type === 'core' && isHardPlus && coreHabits.length > 0 && (
+                      <div className="px-2">
+                        <div className="mt-2 mb-1 flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Slide to complete core</span>
+                          <span className="text-xs text-muted-foreground">{coreCompletedNow}/{coreTotal}</span>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <span className="text-xs font-medium text-muted-foreground">slide to check in</span>
+                          </div>
+                          <Slider
+                            value={[quickCoreSlider]}
+                            onValueChange={handleQuickCoreSlide}
+                            max={100}
+                            step={1}
+                            className="py-3"
+                            trackClassName="h-10 rounded-full bg-muted/30 shadow-inner border border-border"
+                            rangeClassName="bg-green-400 transition-all duration-200 ease-out"
+                            thumbClassName="h-9 w-16 rounded-full border-2 border-green-500 bg-background shadow-lg flex items-center justify-center transition-all duration-200 ease-out hover:shadow-xl"
+                            thumbChildren={<ArrowRight className="w-5 h-5 text-green-600" />}
+                          />
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </>
                 ))}
               </div>
 
