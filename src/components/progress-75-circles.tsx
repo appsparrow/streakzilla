@@ -48,7 +48,8 @@ export function Progress75Circles({
 
   const renderDayIcon = (day: number, status: string) => {
     if (status === 'heart-used') {
-      return <Heart className="w-4 h-4" />;
+      // Use custom heart icon when a heart protected the day
+      return <img src="/icon-streakheart.svg" alt="Heart Used" className="w-4 h-4" />;
     }
     
     return (
