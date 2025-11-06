@@ -1,100 +1,25 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Target, 
   Users, 
   Heart, 
   Zap, 
+  Calendar, 
+  Crown,
+  CheckCircle,
   ArrowRight,
   Star,
   TrendingUp,
   Shield,
   Smartphone,
-  MessageSquare,
-  CheckCircle
+  Globe
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export default function MarketingLanding() {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    name: "",
-    feedback: "",
-    expectations: "",
-    featureInterests: [] as string[],
-  });
-
-  const availableFeatures = [
-    "Community Support & Groups",
-    "Gamification & Points",
-    "Progress Tracking & Analytics",
-    "Social Features & Sharing",
-    "Custom Habit Templates",
-    "Mobile App & Notifications",
-    "Leaderboards & Challenges",
-    "Motivation System (Hearts)",
-  ];
-
-  const handleFeatureToggle = (feature: string) => {
-    setFormData(prev => ({
-      ...prev,
-      featureInterests: prev.featureInterests.includes(feature)
-        ? prev.featureInterests.filter(f => f !== feature)
-        : [...prev.featureInterests, feature]
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.email) {
-      toast.error("Please enter your email address");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase
-        .from("sz_waitlist_responses")
-        .insert({
-          email: formData.email,
-          name: formData.name || null,
-          feedback: formData.feedback || null,
-          expectations: formData.expectations || null,
-          feature_interests: formData.featureInterests.length > 0 ? formData.featureInterests : null,
-          user_agent: navigator.userAgent,
-          referrer: document.referrer || null,
-        });
-
-      if (error) throw error;
-
-      toast.success("Thank you for joining the waitlist! We'll keep you updated on our progress.");
-      
-      // Reset form
-      setFormData({
-        email: "",
-        name: "",
-        feedback: "",
-        expectations: "",
-        featureInterests: [],
-      });
-    } catch (error: any) {
-      console.error("Error submitting waitlist:", error);
-      toast.error(error.message || "Failed to submit. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -110,14 +35,22 @@ export default function MarketingLanding() {
           </div>
           <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm hover:text-primary transition-colors">Features</a>
-            <a href="#waitlist" className="text-sm hover:text-primary transition-colors">Join Waitlist</a>
-            {/* <Button 
+            <a href="#pricing" className="text-sm hover:text-primary transition-colors">Pricing</a>
+            <a href="#testimonials" className="text-sm hover:text-primary transition-colors">Reviews</a>
+            <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate("/auth")}
             >
               Sign In
-            </Button> */}
+            </Button>
+            <Button 
+              size="sm"
+              className="gradient-primary text-primary-foreground border-0"
+              onClick={() => navigate("/auth")}
+            >
+              Get Started
+            </Button>
           </div>
         </div>
       </nav>
@@ -137,122 +70,38 @@ export default function MarketingLanding() {
             Join groups, track progress, and stay motivated with your community. 
             Build good habits and create social groups to encourage and motivate each other.
           </p>
-        </div>
-      </section>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Button 
+              size="lg" 
+              className="gradient-primary text-primary-foreground border-0 text-lg px-8 py-6"
+              onClick={() => navigate("/auth")}
+            >
+              Start Your Streak
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          
+          </div>
 
-      {/* Waitlist Form Section */}
-      <section id="waitlist" className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto">
-          <Card className="border-card-border shadow-lg">
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="h-8 w-8 text-primary" />
+          {/* Social Proof */}
+          <div className="flex items-center justify-center gap-8 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {[1,2,3,4,5].map((i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-primary/20 border-2 border-background" />
+                ))}
               </div>
-              <CardTitle className="text-3xl mb-2">Join the Waitlist & Share Your Thoughts</CardTitle>
-              <CardDescription className="text-base">
-                We're building something special and would love your feedback. Help us understand what you're looking for in a habit-building platform.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                {/* Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name (Optional)</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Your name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                </div>
-
-                {/* Feature Interests */}
-                <div className="space-y-3">
-                  <Label>What features interest you most? (Select all that apply)</Label>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {availableFeatures.map((feature) => (
-                      <div key={feature} className="flex items-center space-x-2 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
-                        <Checkbox
-                          id={feature}
-                          checked={formData.featureInterests.includes(feature)}
-                          onCheckedChange={() => handleFeatureToggle(feature)}
-                        />
-                        <label
-                          htmlFor={feature}
-                          className="text-sm font-medium leading-none cursor-pointer flex-1"
-                        >
-                          {feature}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Feedback */}
-                <div className="space-y-2">
-                  <Label htmlFor="feedback">
-                    What are your thoughts about this product? What would make it valuable to you?
-                  </Label>
-                  <Textarea
-                    id="feedback"
-                    placeholder="Share your thoughts, ideas, or concerns about habit-building platforms..."
-                    value={formData.feedback}
-                    onChange={(e) => setFormData(prev => ({ ...prev, feedback: e.target.value }))}
-                    rows={4}
-                  />
-                </div>
-
-                {/* Expectations */}
-                <div className="space-y-2">
-                  <Label htmlFor="expectations">
-                    What are you hoping to achieve or get from this platform?
-                  </Label>
-                  <Textarea
-                    id="expectations"
-                    placeholder="Tell us about your goals, what you're struggling with, or what would help you build better habits..."
-                    value={formData.expectations}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expectations: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full gradient-primary text-primary-foreground border-0"
-                  size="lg"
-                >
-                  {isSubmitting ? (
-                    "Submitting..."
-                  ) : (
-                    <>
-                      Join Waitlist & Submit Feedback
-                      <CheckCircle className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </Button>
-
-                <p className="text-xs text-muted-foreground text-center">
-                  We respect your privacy. Your information will only be used to keep you updated and improve our product.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
+              <span>10,000+ active users</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span>4.8/5 rating</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              <span>95% completion rate</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -397,6 +246,108 @@ export default function MarketingLanding() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section id="testimonials" className="container mx-auto px-4 py-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            What Our Users Say
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Join thousands of users who have transformed their lives with Streakzilla.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <Card className="border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[1,2,3,4,5].map((i) => (
+                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4">
+                "Streakzilla made habit building fun! The community support and 
+                gamification kept me motivated through my 75 Hard challenge."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20" />
+                <div>
+                  <p className="font-semibold">Sarah M.</p>
+                  <p className="text-sm text-muted-foreground">Fitness Enthusiast</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[1,2,3,4,5].map((i) => (
+                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4">
+                "The heart system and social features are amazing. I love 
+                encouraging others and receiving support when I need it."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20" />
+                <div>
+                  <p className="font-semibold">Michael R.</p>
+                  <p className="text-sm text-muted-foreground">Software Developer</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-card-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-1 mb-4">
+                {[1,2,3,4,5].map((i) => (
+                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <p className="text-muted-foreground mb-4">
+                "Finally, a habit tracker that's actually fun to use! The 
+                progress photos and streak visualization are motivating."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20" />
+                <div>
+                  <p className="font-semibold">Jessica L.</p>
+                  <p className="text-sm text-muted-foreground">Student</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-gradient-to-r from-primary to-pink-600 py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Ready to Transform Your Life?
+          </h2>
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Join thousands of users who have built unbreakable habits with Streakzilla. 
+            Start your journey today!
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              variant="secondary"
+              className="text-lg px-8 py-6"
+              onClick={() => navigate("/auth")}
+            >
+              Get Started Free
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+            
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t bg-background py-12">
         <div className="container mx-auto px-4">
@@ -418,7 +369,7 @@ export default function MarketingLanding() {
               <h3 className="font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
-                <li><a href="#waitlist" className="hover:text-primary transition-colors">Join Waitlist</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Pricing</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Challenges</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Templates</a></li>
               </ul>
@@ -458,3 +409,4 @@ export default function MarketingLanding() {
     </div>
   );
 }
+
